@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calgary Home Builder Comparison Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/index.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --light-bg: #f3f4f6;
+            --dark-text: #1f2937;
+            --border-color: #e5e7eb;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            line-height: 1.6;
+            color: var(--dark-text);
+            background: var(--light-bg);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .search-container {
+            margin-bottom: 2rem;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .search-input,
+        .filter-select {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-input:focus,
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            border-bottom: 2px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .builders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .builder-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .builder-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .builder-card-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .builder-logo {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .builder-card-title {
+            font-size: 1.3rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .builder-card-body {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .builder-info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .builder-info-item i {
+            color: var(--secondary-color);
+            width: 20px;
+            text-align: center;
+        }
+
+        .builder-card-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: #1e3a8a;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-secondary {
+            background: var(--light-bg);
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .modal-header h2 {
+            color: var(--primary-color);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .modal-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .modal-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .modal-section h3 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .carousel-container {
+            position: relative;
+            background: var(--light-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .carousel-image {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+        }
+
+        .carousel-controls {
+            position: absolute;
+            bottom: 0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .carousel-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .comparison-table thead {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-error {
+            color: var(--danger-color);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .form-error.show {
+            display: block;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: var(--danger-color);
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: var(--success-color);
+            border-left: 4px solid var(--success-color);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .stat-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6b7280;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            .container {
+                padding: 1rem;
+            }
+            .builders-grid {
+                grid-template-columns: 1fr;
+            }
+            .modal-body {
+                grid-template-columns: 1fr;
+            }
+            .tab-btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-home"></i> Calgary Home Builder Comparison</h1>
+        <p>Compare 40+ professional home builders in Calgary</p>
+    </div>
+
+    <div class="container">
+        <div class="search-container">
+            <div class="search-bar">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search builders by name...">
+                <select id="priceFilter" class="filter-select">
+                    <option value="">All Price Ranges</option>
+                    <option value="budget">Budget Friendly</option>
+                    <option value="mid">Mid-Range</option>
+                    <option value="premium">Premium</option>
+                    <option value="luxury">Luxury</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="errorAlert" class="alert alert-error"></div>
+        <div id="successAlert" class="alert alert-success"></div>
+
+        <div class="tabs" id="tabContainer">
+            <button class="tab-btn active" data-tab="builders">Builders</button>
+            <button class="tab-btn" data-tab="comparison">Comparison</button>
+            <button class="tab-btn" data-tab="trends">Market Trends</button>
+            <button class="tab-btn" data-tab="contact">Contact Us</button>
+        </div>
+
+        <div id="builders" class="tab-content active">
+            <div id="buildersContainer" class="builders-grid"></div>
+        </div>
+
+        <div id="comparison" class="tab-content">
+            <div style="overflow-x: auto;">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Builder</th>
+                            <th>Founded</th>
+                            <th>Communities</th>
+                            <th>Price Range</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparisonBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="trends" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card"><h3>40+ Builders</h3><p>Professional builders across Calgary</p></div>
+                <div class="stat-card"><h3>Budget to Luxury</h3><p>All price ranges available</p></div>
+                <div class="stat-card"><h3>100+ Communities</h3><p>Neighborhoods throughout Calgary</p></div>
+            </div>
+            <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: var(--shadow);">
+                <h2 style="color: var(--primary-color); margin-bottom: 1rem;">Calgary Housing Market Insights</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                    <div><h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Average Home Prices</h3><p>Calgary homes range from $380K to $3.5M+ depending on location and builder.</p></div>
+                    <div><h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Popular Communities</h3><p>Southeast, Southwest, and Northwest neighborhoods show strong growth and demand.</p></div>
+                    <div><h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Builder Trends</h3><p>Energy-efficient homes, smart features, and open-concept designs are increasingly popular.</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="contact" class="tab-content">
+            <form id="contactForm" class="contact-form">
+                <h2 style="color: var(--primary-color); margin-bottom: 1rem;">Get in Touch</h2>
+                <div class="form-group">
+                    <label for="contactName">Full Name *</label>
+                    <input type="text" id="contactName" required>
+                    <div class="form-error">Name is required</div>
+                </div>
+                <div class="form-group">
+                    <label for="contactEmail">Email Address *</label>
+                    <input type="email" id="contactEmail" required>
+                    <div class="form-error">Valid email is required</div>
+                </div>
+                <div class="form-group">
+                    <label for="contactPhone">Phone Number</label>
+                    <input type="tel" id="contactPhone">
+                </div>
+                <div class="form-group">
+                    <label for="contactBuilder">Interested Builder *</label>
+                    <select id="contactBuilder" required>
+                        <option value="">Select a builder...</option>
+                    </select>
+                    <div class="form-error">Builder selection is required</div>
+                </div>
+                <div class="form-group">
+                    <label for="contactMessage">Message *</label>
+                    <textarea id="contactMessage" required></textarea>
+                    <div class="form-error">Message is required</div>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Message</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="builderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalBuilderName"></h2>
+                <button class="close-btn" type="button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h3>House Types</h3>
+                    <div class="carousel-container">
+                        <img id="carouselImage" class="carousel-image" src="" alt="House type">
+                        <div class="carousel-controls">
+                            <button class="carousel-btn" id="prevBtn" type="button"><i class="fas fa-chevron-left"></i></button>
+                            <button class="carousel-btn" id="nextBtn" type="button"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div id="carouselInfo"></div>
+                </div>
+                <div class="modal-section">
+                    <h3>Details</h3>
+                    <div id="modalDetails"></div>
+                    <h3 style="margin-top: 1.5rem;">Communities</h3>
+                    <div id="modalCommunities"></div>
+                    <h3 style="margin-top: 1.5rem;">Contact</h3>
+                    <div id="modalContact"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BUILDERS_DATA = [
+            {id:1,name:"Trico Homes",description:"Award-winning builder with diverse communities",founded:1960,price_range:"mid",communities:["Bridgeland","Walden","Mahogany"],house_types:[{name:"Executive Homes",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"2500-3500",bedrooms:"4-5",bathrooms:"2.5-3",price_range:"$650K-$850K"}],website:"www.tricohomes.com",phone:"(403) 555-0101",logo_url:"TH"},
+            {id:2,name:"Shane Homes",description:"Family-oriented builder specializing in suburban communities",founded:1995,price_range:"mid",communities:["Aspen Woods","Auburn Bay","Reunion"],house_types:[{name:"Family Homes",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"2000-3000",bedrooms:"3-4",bathrooms:"2-2.5",price_range:"$550K-$750K"}],website:"www.shanehomes.ca",phone:"(403) 555-0102",logo_url:"SH"},
+            {id:3,name:"Sterling Homes",description:"Quality construction with attention to detail",founded:1985,price_range:"mid",communities:["Mahogany","Aspen Landing","Canals"],house_types:[{name:"Contemporary Designs",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"2300-3200",bedrooms:"4",bathrooms:"2.5",price_range:"$600K-$800K"}],website:"www.sterling-homes.ca",phone:"(403) 555-0103",logo_url:"SH"},
+            {id:4,name:"Morrison Homes",description:"Innovative designs with sustainable practices",founded:1975,price_range:"mid",communities:["Bridgeland","Heartland","Marigold"],house_types:[{name:"Modern Homes",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"2200-3100",bedrooms:"3-4",bathrooms:"2-2.5",price_range:"$580K-$780K"}],website:"www.morrisonhomes.com",phone:"(403) 555-0104",logo_url:"MH"},
+            {id:5,name:"Excel Homes",description:"Luxury homes with premium finishes",founded:2000,price_range:"premium",communities:["Bow Trail","Aspen Woods","Mount Royal"],house_types:[{name:"Luxury Estates",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"3500-5000",bedrooms:"5-6",bathrooms:"3.5-4",price_range:"$950K-$1.5M"}],website:"www.excelhomes.ca",phone:"(403) 555-0105",logo_url:"EH"},
+            {id:6,name:"Jayman BUILT",description:"Modern sustainable home building",founded:2005,price_range:"mid",communities:["Mahogany","Riverside","Country Club"],house_types:[{name:"Eco-Friendly Homes",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"2000-2800",bedrooms:"3-4",bathrooms:"2-2.5",price_range:"$520K-$700K"}],website:"www.jaymanbuilt.com",phone:"(403) 555-0106",logo_url:"JB"},
+            {id:7,name:"Hopewell Residential",description:"Master-planned communities with excellent amenities",founded:2010,price_range:"mid",communities:["Mahogany","Bridgeland","Savanna"],house_types:[{name:"Community Homes",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"1800-2700",bedrooms:"3-4",bathrooms:"2-2.5",price_range:"$480K-$650K"}],website:"www.hopewellresidential.com",phone:"(403) 555-0107",logo_url:"HR"},
+            {id:8,name:"Brookfield Residential",description:"Large-scale developer with multiple communities",founded:1978,price_range:"mid",communities:["Reunion","Auburn Bay","Aspen Landing"],house_types:[{name:"Standard Homes",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"1900-2600",bedrooms:"3-4",bathrooms:"2-2.5",price_range:"$500K-$680K"}],website:"www.brookfieldresidential.com",phone:"(403) 555-0108",logo_url:"BR"},
+            {id:9,name:"Cardel Homes",description:"Energy-efficient homes with smart features",founded:1982,price_range:"mid",communities:["Mahogany","Marigold","Aspen"],house_types:[{name:"Smart Homes",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"2100-2900",bedrooms:"4",bathrooms:"2.5",price_range:"$590K-$780K"}],website:"www.cardelhomes.com",phone:"(403) 555-0109",logo_url:"CH"},
+            {id:10,name:"Good Earth Builders",description:"Sustainable and environmentally conscious building",founded:2008,price_range:"premium",communities:["Bridgeland","Mahogany","Greenview"],house_types:[{name:"Green Homes",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"2400-3300",bedrooms:"4-5",bathrooms:"2.5-3",price_range:"$650K-$850K"}],website:"www.goodearthbuilders.ca",phone:"(403) 555-0110",logo_url:"GEB"},
+            {id:11,name:"Genesis Builders Group",description:"Custom and semi-custom home builder",founded:2003,price_range:"premium",communities:["Mount Royal","Hillhurst","Bow Trail"],house_types:[{name:"Custom Builds",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"3000-4500",bedrooms:"5-6",bathrooms:"3-4",price_range:"$850K-$1.3M"}],website:"www.genesisbuilders.ca",phone:"(403) 555-0111",logo_url:"GBG"},
+            {id:12,name:"Calbridge Homes",description:"Innovative designs with latest technologies",founded:2007,price_range:"mid",communities:["Auburn Bay","Reunion","Riverstone"],house_types:[{name:"Tech Homes",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"2200-3000",bedrooms:"4",bathrooms:"2.5",price_range:"$600K-$780K"}],website:"www.calbridge.com",phone:"(403) 555-0112",logo_url:"CB"},
+            {id:13,name:"Partners Homes",description:"Value-oriented builder for first-time buyers",founded:1998,price_range:"budget",communities:["Copperfield","Mahogany","Timberlea"],house_types:[{name:"Starter Homes",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"1600-2200",bedrooms:"2-3",bathrooms:"1.5-2",price_range:"$380K-$520K"}],website:"www.partners-homes.ca",phone:"(403) 555-0113",logo_url:"PH"},
+            {id:14,name:"Cedarglen Homes",description:"Townhomes and condominiums specialist",founded:2006,price_range:"budget",communities:["Bridgeland","Mahogany","Aspen Landing"],house_types:[{name:"Townhomes",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"1400-2000",bedrooms:"2-3",bathrooms:"1.5-2",price_range:"$320K-$480K"}],website:"www.cedarglen.com",phone:"(403) 555-0114",logo_url:"CG"},
+            {id:15,name:"Qualico Communities",description:"Mixed-use communities with lifestyle focus",founded:2001,price_range:"mid",communities:["Mahogany","Seton","Ravenswood"],house_types:[{name:"Lifestyle Homes",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"2000-2900",bedrooms:"3-4",bathrooms:"2-2.5",price_range:"$520K-$720K"}],website:"www.qualico.com",phone:"(403) 555-0115",logo_url:"QC"},
+            {id:16,name:"Broadview Homes",description:"Urban infill and inner-city specialist",founded:2009,price_range:"premium",communities:["Bridgeland","Inglewood","Marda Loop"],house_types:[{name:"Urban Homes",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"2300-3500",bedrooms:"3-5",bathrooms:"2-3",price_range:"$700K-$950K"}],website:"www.broadview.ca",phone:"(403) 555-0116",logo_url:"BV"},
+            {id:17,name:"NuVista Homes",description:"Contemporary designs with modern amenities",founded:2004,price_range:"mid",communities:["Aspen Landing","Reunion","Auburn Bay"],house_types:[{name:"Contemporary",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"2100-3000",bedrooms:"4",bathrooms:"2.5",price_range:"$580K-$760K"}],website:"www.nuvista.ca",phone:"(403) 555-0117",logo_url:"NV"},
+            {id:18,name:"Homes by Avi",description:"Luxury custom home specialist",founded:2002,price_range:"luxury",communities:["Mount Royal","Bow Trail","Aspen Woods"],house_types:[{name:"Luxury Custom",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"4000-6000",bedrooms:"5-7",bathrooms:"4-5",price_range:"$1.5M-$3M"}],website:"www.homesbyavi.ca",phone:"(403) 555-0118",logo_url:"HBA"},
+            {id:19,name:"Meritage Homes",description:"Energy-efficient and smart home technology",founded:1985,price_range:"premium",communities:["Auburn Bay","Reunion","Aspen Landing"],house_types:[{name:"Smart Efficient",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"2500-3500",bedrooms:"4-5",bathrooms:"2.5-3",price_range:"$720K-$950K"}],website:"www.meritage.com",phone:"(403) 555-0119",logo_url:"MH"},
+            {id:20,name:"West Ridge Fine Homes",description:"Upscale residential communities",founded:2011,price_range:"premium",communities:["West Springs","West Hillhurst","Aspen Woods"],house_types:[{name:"Fine Homes",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"3200-4500",bedrooms:"4-5",bathrooms:"3-3.5",price_range:"$900K-$1.3M"}],website:"www.westridgefi.ca",phone:"(403) 555-0120",logo_url:"WRF"},
+            {id:21,name:"Sunset Homes",description:"Family-friendly suburban builder",founded:1999,price_range:"mid",communities:["Sunset","Mahogany","Bridgeland"],house_types:[{name:"Family Homes",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"2000-2800",bedrooms:"3-4",bathrooms:"2-2.5",price_range:"$520K-$700K"}],website:"www.sunset-homes.ca",phone:"(403) 555-0121",logo_url:"SH"},
+            {id:22,name:"McKee Homes",description:"Semi-custom and custom homes",founded:1996,price_range:"premium",communities:["Aspen Woods","Mount Royal","Hillhurst"],house_types:[{name:"Custom Homes",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"2800-4000",bedrooms:"4-5",bathrooms:"2.5-3.5",price_range:"$800K-$1.2M"}],website:"www.mckeehomes.ca",phone:"(403) 555-0122",logo_url:"MK"},
+            {id:23,name:"Landmark Homes",description:"Diverse community developments",founded:2008,price_range:"mid",communities:["Bridgeland","Mahogany","Seton"],house_types:[{name:"Community Homes",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"1900-2700",bedrooms:"3-4",bathrooms:"2-2.5",price_range:"$490K-$680K"}],website:"www.landmark.ca",phone:"(403) 555-0123",logo_url:"LH"},
+            {id:24,name:"Homes by Qualico",description:"Established community-focused builder",founded:1992,price_range:"mid",communities:["Seton","Ravenswood","Skyline"],house_types:[{name:"Community Homes",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"2000-2900",bedrooms:"3-4",bathrooms:"2-2.5",price_range:"$530K-$730K"}],website:"www.homesby.ca",phone:"(403) 555-0124",logo_url:"HBQ"},
+            {id:25,name:"Bedrock Homes",description:"Modern quality homes with solid foundation",founded:2010,price_range:"mid",communities:["Auburn Bay","Aspen Landing","Reunion"],house_types:[{name:"Quality Homes",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"2100-2950",bedrooms:"4",bathrooms:"2.5",price_range:"$600K-$800K"}],website:"www.bedrockhomes.ca",phone:"(403) 555-0125",logo_url:"BH"},
+            {id:26,name:"Crystal Homes",description:"Custom luxury home builder",founded:2005,price_range:"luxury",communities:["Mount Royal","Bow Trail","Aspen Woods"],house_types:[{name:"Luxury Designs",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"3500-5500",bedrooms:"5-6",bathrooms:"3.5-4",price_range:"$1.2M-$2M"}],website:"www.crystalhomes.ca",phone:"(403) 555-0126",logo_url:"CH"},
+            {id:27,name:"Urban Edge Builders",description:"Inner city developments and infill",founded:2012,price_range:"premium",communities:["Bridgeland","Inglewood","Kensington"],house_types:[{name:"Urban Living",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"2000-3200",bedrooms:"3-4",bathrooms:"2-2.5",price_range:"$680K-$900K"}],website:"www.urbaned.ca",phone:"(403) 555-0127",logo_url:"UEB"},
+            {id:28,name:"Prairie Home Builders",description:"Community-focused residential development",founded:2006,price_range:"mid",communities:["Mahogany","Bridgeland","Aspen Landing"],house_types:[{name:"Prairie Style",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"1900-2800",bedrooms:"3-4",bathrooms:"2-2.5",price_range:"$510K-$700K"}],website:"www.prairie.ca",phone:"(403) 555-0128",logo_url:"PHB"},
+            {id:29,name:"Heritage Homes",description:"Traditional and classic home designs",founded:2001,price_range:"mid",communities:["Aspen Woods","Mahogany","Bridgeland"],house_types:[{name:"Traditional",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"2200-3100",bedrooms:"4",bathrooms:"2.5",price_range:"$580K-$780K"}],website:"www.heritage-homes.ca",phone:"(403) 555-0129",logo_url:"HH"},
+            {id:30,name:"Pinnacle Homes",description:"Premium properties in exclusive communities",founded:2003,price_range:"luxury",communities:["Mount Royal","Aspen Woods","Bow Trail"],house_types:[{name:"Pinnacle Estates",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"4000-6500",bedrooms:"5-7",bathrooms:"4-5",price_range:"$1.8M-$3.5M"}],website:"www.pinnacle-homes.ca",phone:"(403) 555-0130",logo_url:"PH"},
+            {id:31,name:"NextGen Builders",description:"Sustainable and green home building",founded:2011,price_range:"premium",communities:["Bridgeland","Greenview","Aspen Landing"],house_types:[{name:"Green Living",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"2300-3300",bedrooms:"4-5",bathrooms:"2.5-3",price_range:"$680K-$900K"}],website:"www.nextgen.ca",phone:"(403) 555-0131",logo_url:"NG"},
+            {id:32,name:"Crown Royal Homes",description:"Upscale communities with premium finishes",founded:2004,price_range:"premium",communities:["Aspen Woods","Bow Trail","Mount Royal"],house_types:[{name:"Royal Estates",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"3000-4500",bedrooms:"4-5",bathrooms:"3-3.5",price_range:"$850K-$1.4M"}],website:"www.crownroyal.ca",phone:"(403) 555-0132",logo_url:"CRH"},
+            {id:33,name:"Summit Homes",description:"Estate properties and luxury development",founded:2007,price_range:"luxury",communities:["Mount Royal","Hillhurst","Aspen Woods"],house_types:[{name:"Estate Homes",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"3800-5500",bedrooms:"5-6",bathrooms:"3.5-4",price_range:"$1.4M-$2.5M"}],website:"www.summit-homes.ca",phone:"(403) 555-0133",logo_url:"SH"},
+            {id:34,name:"Riverside Builders",description:"Waterfront and premium location specialist",founded:2008,price_range:"luxury",communities:["Aspen Landing","Bridgeland","Mahogany"],house_types:[{name:"Riverside Living",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"2800-4200",bedrooms:"4-5",bathrooms:"2.5-3.5",price_range:"$950K-$1.5M"}],website:"www.riverside-builders.ca",phone:"(403) 555-0134",logo_url:"RB"},
+            {id:35,name:"Parkside Development",description:"Family neighborhoods with green spaces",founded:2006,price_range:"mid",communities:["Aspen Landing","Reunion","Auburn Bay"],house_types:[{name:"Family Homes",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"1900-2700",bedrooms:"3-4",bathrooms:"2-2.5",price_range:"$500K-$680K"}],website:"www.parkside.ca",phone:"(403) 555-0135",logo_url:"PD"},
+            {id:36,name:"Vista Builders",description:"Homes with stunning views and locations",founded:2009,price_range:"premium",communities:["Bow Trail","Aspen Woods","Hillhurst"],house_types:[{name:"View Homes",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"2600-3800",bedrooms:"4-5",bathrooms:"2.5-3.5",price_range:"$800K-$1.2M"}],website:"www.vista-builders.ca",phone:"(403) 555-0136",logo_url:"VB"},
+            {id:37,name:"Metropolitan Homes",description:"Urban and contemporary living spaces",founded:2010,price_range:"premium",communities:["Bridgeland","Inglewood","Kensington"],house_types:[{name:"Metro Living",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"2000-3200",bedrooms:"3-4",bathrooms:"2-2.5",price_range:"$700K-$950K"}],website:"www.metropolitan.ca",phone:"(403) 555-0137",logo_url:"MH"},
+            {id:38,name:"Heritage Legacy",description:"Historic area development and restoration",founded:2007,price_range:"premium",communities:["Inglewood","Bridgeland","Marda Loop"],house_types:[{name:"Heritage Homes",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"2200-3300",bedrooms:"4",bathrooms:"2.5",price_range:"$720K-$950K"}],website:"www.heritage-legacy.ca",phone:"(403) 555-0138",logo_url:"HL"},
+            {id:39,name:"Modern Living Developments",description:"Contemporary design and smart technology",founded:2012,price_range:"premium",communities:["Aspen Landing","Auburn Bay","Reunion"],house_types:[{name:"Modern Designs",image_url:"https://images.unsplash.com/photo-1570129477492-45ec003bc2ca?w=400&h=300&fit=crop",sqft_range:"2300-3400",bedrooms:"4",bathrooms:"2.5-3",price_range:"$750K-$1M"}],website:"www.modern-living.ca",phone:"(403) 555-0139",logo_url:"MLD"},
+            {id:40,name:"Lakeside Communities",description:"Master-planned communities with resort amenities",founded:2005,price_range:"premium",communities:["Mahogany","Seton","Ravenswood"],house_types:[{name:"Community Living",image_url:"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",sqft_range:"2400-3500",bedrooms:"4-5",bathrooms:"2.5-3",price_range:"$720K-$950K"}],website:"www.lakeside.ca",phone:"(403) 555-0140",logo_url:"LC"}
+        ];
+
+        const STATE = {currentTab:'builders',currentBuilder:null,currentCarouselIndex:0,filteredBuilders:[...BUILDERS_DATA],compareList:[]};
+
+        function logError(msg,err){console.error(`[ERROR] ${msg}:`,err);}
+        function showAlert(type,msg){const el=document.getElementById(`${type}Alert`);if(el){el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),5000);}}
+        function validateEmail(e){return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
+        function escapeHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+
+        function initEmailJS(){try{emailjs.init('service_z1sgu4q');}catch(e){logError('initEmailJS',e);}}
+
+        function populateBuilderSelect(){try{const s=document.getElementById('contactBuilder');if(!s)return;BUILDERS_DATA.forEach(b=>{const o=document.createElement('option');o.value=b.name;o.textContent=b.name;s.appendChild(o);});}catch(e){logError('populateBuilderSelect',e);}}
+
+        function renderBuilders(list=BUILDERS_DATA){try{const c=document.getElementById('buildersContainer');if(!c)return;if(!Array.isArray(list)||list.length===0){c.innerHTML='<div class="empty-state"><i class="fas fa-search"></i><p>No builders found</p></div>';return;}c.innerHTML=list.map(b=>`<div class="builder-card" data-id="${b.id}"><div class="builder-card-header"><div class="builder-logo">${b.logo_url}</div><div><div class="builder-card-title">${escapeHtml(b.name)}</div><div style="font-size:0.9rem;opacity:0.9;">Est. ${b.founded}</div></div></div><div class="builder-card-body"><p>${escapeHtml(b.description)}</p><div class="builder-info-item"><i class="fas fa-map-marker-alt"></i> ${b.communities.length} Communities</div><div class="builder-info-item"><i class="fas fa-money-bill-alt"></i> ${b.house_types[0]?.price_range||'Contact'}</div></div><div class="builder-card-footer"><button class="btn btn-primary" onclick="openBuilderModal(${b.id})">Details</button><button class="btn btn-secondary" onclick="toggleCompare(${b.id})"><i class="fas fa-plus"></i></button></div></div>`).join('');}catch(e){logError('renderBuilders',e);}}
+
+        function filterBuilders(q='',p=''){try{STATE.filteredBuilders=BUILDERS_DATA.filter(b=>{const mq=!q||b.name.toLowerCase().includes(q.toLowerCase())||b.description.toLowerCase().includes(q.toLowerCase());const mp=!p||b.price_range===p;return mq&&mp;});renderBuilders(STATE.filteredBuilders);}catch(e){logError('filterBuilders',e);}}
+
+        function openBuilderModal(id){try{const b=BUILDERS_DATA.find(x=>x.id===id);if(!b)throw new Error('Not found');STATE.currentBuilder=b;STATE.currentCarouselIndex=0;const m=document.getElementById('builderModal');if(!m)return;const n=document.getElementById('modalBuilderName');if(n)n.textContent=escapeHtml(b.name);updateCarousel();const d=document.getElementById('modalDetails');if(d)d.innerHTML=`<div><p><strong>Founded:</strong> ${b.founded}</p><p><strong>Price:</strong> ${b.house_types[0]?.price_range||'N/A'}</p><p>${escapeHtml(b.description)}</p></div>`;const co=document.getElementById('modalCommunities');if(co)co.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:0.5rem;">${b.communities.map(c=>`<span style="background:var(--light-bg);padding:0.5rem 1rem;border-radius:20px;font-size:0.9rem;">${escapeHtml(c)}</span>`).join('')}</div>`;const ct=document.getElementById('modalContact');if(ct)ct.innerHTML=`<div><p><i class="fas fa-phone"></i> ${escapeHtml(b.phone)}</p><p><i class="fas fa-globe"></i> ${escapeHtml(b.website)}</p></div>`;m.classList.add('active');}catch(e){logError('openBuilderModal',e);showAlert('error','Failed to open details');}}
+
+        function closeBuilderModal(){try{const m=document.getElementById('builderModal');if(m)m.classList.remove('active');STATE.currentBuilder=null;}catch(e){logError('closeBuilderModal',e);}}
+
+        function updateCarousel(dir=null){try{if(!STATE.currentBuilder||!STATE.currentBuilder.house_types)return;const types=STATE.currentBuilder.house_types;if(types.length===0)return;if(dir==='next'){STATE.currentCarouselIndex=(STATE.currentCarouselIndex+1)%types.length;}else if(dir==='prev'){STATE.currentCarouselIndex=(STATE.currentCarouselIndex-1+types.length)%types.length;}const cur=types[STATE.currentCarouselIndex];if(!cur)return;const img=document.getElementById('carouselImage');if(img){img.src=cur.image_url||'https://via.placeholder.com/400x300';img.alt=escapeHtml(cur.name);}const info=document.getElementById('carouselInfo');if(info)info.innerHTML=`<div style="background:var(--light-bg);padding:1rem;border-radius:6px;"><p><strong>${escapeHtml(cur.name)}</strong></p><p><i class="fas fa-ruler-combined"></i> ${escapeHtml(cur.sqft_range)} sqft</p><p><i class="fas fa-bed"></i> ${escapeHtml(cur.bedrooms)} beds</p><p><i class="fas fa-bath"></i> ${escapeHtml(cur.bathrooms)} baths</p><p><i class="fas fa-money-bill-alt"></i> ${escapeHtml(cur.price_range)}</p></div>`;}catch(e){logError('updateCarousel',e);}}
+
+        function toggleCompare(id){try{const idx=STATE.compareList.indexOf(id);if(idx>-1){STATE.compareList.splice(idx,1);}else if(STATE.compareList.length<5){STATE.compareList.push(id);}else{showAlert('error','Max 5 builders');return;}renderComparison();showAlert('success',`Updated (${STATE.compareList.length}/5)`);}catch(e){logError('toggleCompare',e);}}
+
+        function renderComparison(){try{const tb=document.getElementById('comparisonBody');if(!tb)return;if(STATE.compareList.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;">Select up to 5 builders</td></tr>';return;}const builders=STATE.compareList.map(id=>BUILDERS_DATA.find(b=>b.id===id)).filter(b=>b);tb.innerHTML=builders.map(b=>`<tr><td><strong>${escapeHtml(b.name)}</strong></td><td>${b.founded}</td><td>${b.communities.length}</td><td>${b.house_types[0]?.price_range||'Contact'}</td><td><button class="btn btn-secondary" onclick="toggleCompare(${b.id})" style="padding:0.25rem 0.75rem;font-size:0.85rem;">Remove</button></td></tr>`).join('');}catch(e){logError('renderComparison',e);}}
+
+        function switchTab(tabName){try{if(!tabName)return;document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.remove('active'));const t=document.getElementById(tabName);if(t)t.classList.add('active');const b=document.querySelector(`[data-tab="${tabName}"]`);if(b)b.classList.add('active');STATE.currentTab=tabName;}catch(e){logError('switchTab',e);}}
+
+        function handleContactForm(e){try{e.preventDefault();const form=document.getElementById('contactForm');if(!form)return;const name=document.getElementById('contactName')?.value||'';const email=document.getElementById('contactEmail')?.value||'';const phone=document.getElementById('contactPhone')?.value||'';const builder=document.getElementById('contactBuilder')?.value||'';const message=document.getElementById('contactMessage')?.value||'';let valid=true;if(!name.trim()){document.getElementById('contactName').style.borderColor='var(--danger-color)';valid=false;}if(!validateEmail(email)){document.getElementById('contactEmail').style.borderColor='var(--danger-color)';valid=false;}if(!builder){document.getElementById('contactBuilder').style.borderColor='var(--danger-color)';valid=false;}if(!message.trim()){document.getElementById('contactMessage').style.borderColor='var(--danger-color)';valid=false;}if(!valid){showAlert('error','Fill all required fields');return;}emailjs.send('service_z1sgu4q','template_wjc5dcq',{to_email:'info@calgarybuilders.ca',from_name:escapeHtml(name),from_email:escapeHtml(email),phone:escapeHtml(phone),builder:escapeHtml(builder),message:escapeHtml(message)}).then(()=>{showAlert('success','Message sent!');form.reset();document.querySelectorAll('input, textarea, select').forEach(f=>f.style.borderColor='');}).catch(err=>{logError('email',err);showAlert('error','Send failed');});}catch(e){logError('handleContactForm',e);showAlert('error','Error occurred');}}
+
+        function attachEventListeners(){try{const si=document.getElementById('searchInput');const pf=document.getElementById('priceFilter');if(si)si.addEventListener('input',(e)=>filterBuilders(e.target.value,pf?.value||''));if(pf)pf.addEventListener('change',(e)=>filterBuilders(si?.value||'',e.target.value));const tc=document.getElementById('tabContainer');if(tc){tc.addEventListener('click',(e)=>{const btn=e.target.closest('.tab-btn');if(btn){const tn=btn.getAttribute('data-tab');if(tn)switchTab(tn);}});}const modal=document.getElementById('builderModal');if(modal){const cb=modal.querySelector('.close-btn');if(cb)cb.addEventListener('click',closeBuilderModal);modal.addEventListener('click',(e)=>{if(e.target===modal)closeBuilderModal();});}const pb=document.getElementById('prevBtn');const nb=document.getElementById('nextBtn');if(pb)pb.addEventListener('click',()=>updateCarousel('prev'));if(nb)nb.addEventListener('click',()=>updateCarousel('next'));const cf=document.getElementById('contactForm');if(cf)cf.addEventListener('submit',handleContactForm);}catch(e){logError('attachEventListeners',e);}}
+
+        function initApp(){try{console.log('Initializing...');initEmailJS();populateBuilderSelect();renderBuilders();renderComparison();attachEventListeners();console.log('Ready - 40 builders loaded');}catch(e){logError('initApp',e);showAlert('error','Init failed');}}
+
+        if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initApp);}else{initApp();}
+    </script>
+</body>
+</html>
